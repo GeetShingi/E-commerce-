@@ -115,7 +115,7 @@ cartRouter.route('/:productId')
                 index = cart.products.indexOf(req.params.productId);
                 if(index >= 0) {
                     cart.products.splice(index, 1);
-                    products.save().then((cart) => {
+                    cart.save().then((cart) => {
                         res.status = 200;
                         res.setHeader('Content-Type', 'application/json');
                         res.json(cart);
