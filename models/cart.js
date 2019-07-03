@@ -7,9 +7,31 @@ var cartSchema = new Schema({
         ref: 'User'
     },
     products:  [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    }]
+        name: {
+        	type: String,
+        	required: true
+        },
+        description: {
+        	type: String,
+        	required: true
+        },
+        size: {
+        	type: String,
+        	required: true
+        },
+        quantity: {
+        	type: Number,
+        	required: true
+        },
+        price: {
+        	type: Number,
+        	required: true
+        }
+    }],
+    delivered: {
+        type: Boolean,
+        default: false
+    },
 }, {
     timestamps: true
 });

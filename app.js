@@ -2,6 +2,8 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var config = require('./config.js');
@@ -9,6 +11,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var productRouter = require('./routes/productRouter');
 var cartRouter = require('./routes/cartRouter');
+var uploadRouter = require('./routes/uploadRouter');
+var orderRouter = require('./routes/orderRouter');
 var app = express();
 var passport = require('passport');
 var authenticate = require('./authenticate');
@@ -30,10 +34,10 @@ app.use(passport.initialize());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/imageUpload', uploadRouter);
 app.use('/products', productRouter);
 app.use('/cart', cartRouter);
-
-
+app.use('/orders', orderRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

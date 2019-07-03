@@ -18,7 +18,7 @@ cartRouter.route('/')
         }, (err) => next(err)
         ).catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Cart.findOne({user: req.user._id}).then((cart) => {
             if (!cart) {
                 Cart.create({"user": req.user._id, "products": req.body}).then((cart) => {
@@ -28,11 +28,7 @@ cartRouter.route('/')
                 });
             }
             else {
-                for(var i=0; i<req.body.length; i++) {
-                    if (cart.products.indexOf(req.body[i]._id) === -1) {
-                        cart.products.push(req.body[i]._id);
-                    }
-                }
+                cart.products.push(req.body);
                 cart.save().then((cart) => {
                     res.status = 200;
                     res.setHeader('Content-Type', 'application/json');
@@ -109,32 +105,37 @@ cartRouter.route('/:productId')
         res.statusCode = 403;
         res.end('PUT operation not supported on /cart/:productId');
     })
+    cartRouter.route('/:cartId/products/:productId')
+    .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        Cart.findOne({user: req.user._id}).then((cart) => {
-            if(cart) {
-                index = cart.products.indexOf(req.params.productId);
-                if(index >= 0) {
-                    cart.products.splice(index, 1);
-                    cart.save().then((cart) => {
-                        res.status = 200;
-                        res.setHeader('Content-Type', 'application/json');
-                        res.json(cart);
-                    }, (err) => next(err));
-                }
-                else {
-                    err = new Error(req.params.productId + 'not found');
-                err.status = 404;
-                return next(err);
-                }
-            }
-            else {
-                err = new Error('Cart not found');
-                err.status = 404;
-                return next(err);
-            }
-        }, (err) => next(err))
-        .catch((err) => next(err));
-    });
-
+    Cart.findById(req.params.cartId)
+    .then((cart) => {
+        if (cart != null && cart.products.id(req.params.productId) != null) {
+            cart.products.id(req.params.productId).remove();
+            cart.save()
+            .then((cart) => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(cart);
+            }, (err) => next(err));
+        }
+        else if (cart == null) {
+            err = new Error('Cart ' + req.params.productId + ' not found');
+            err.status = 404;
+            return next(err);
+        }
+        else if (cart.products.id(req.params.productId) == null) {
+            err = new Error('Product ' + req.params.productId + ' not found');
+            err.status = 404;
+            return next(err);            
+        }
+        else {
+            err = new Error('you are not authorized to delete this comment!');
+            err.status = 403;
+            return next(err);  
+        }
+    }, (err) => next(err))
+    .catch((err) => next(err));
+});
 
 module.exports = cartRouter;
